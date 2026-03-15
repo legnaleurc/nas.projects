@@ -1,5 +1,6 @@
 services:
   feed:
+    container_name: feed
     build:
       context: .
     volumes:
