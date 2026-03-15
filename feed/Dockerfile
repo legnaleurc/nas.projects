@@ -1,15 +1,19 @@
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim-trixie
 
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libmediainfo0v5 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 ENV UV_SYSTEM_PYTHON=1
 ENV UV_NO_BINARY_PACKAGE=pymediainfo
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libmagic1 \
-    libmediainfo0v5 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
+# Set working directory
 WORKDIR /app
-COPY . /app
-RUN uv sync --no-dev
+
+# Copy the wdcli script
+COPY scripts/feed.sh /app/feed.sh
+RUN chmod +x /app/feed.sh

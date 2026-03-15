@@ -13,7 +13,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN mkdir -p /mnt/config /mnt/data /mnt/storage
 
 # Copy the wdcli script
-COPY wdcli /usr/local/bin/wdcli
+COPY scripts/wdcli /usr/local/bin/wdcli
 RUN chmod +x /usr/local/bin/wdcli
 
 # Set working directory
