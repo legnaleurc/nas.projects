@@ -1,0 +1,14 @@
+services:
+  shell:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wdcli
+    volumes:
+      - ${CONFIG_PATH}:/mnt/config:ro
+      - ${DATA_PATH}:/mnt/data:rw
+      - ${STORAGE_PATH}:/mnt/storage:rw
+    environment:
+      - TZ=${TZ:-UTC}
+    stdin_open: true
+    tty: true

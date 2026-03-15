@@ -1,0 +1,58 @@
+services:
+  acme:
+    image: neilpang/acme.sh:latest
+    container_name: acme
+    restart: unless-stopped
+
+    # Run as root (Synology Container Manager default)
+    user: root
+
+    # Custom entrypoint for auto-configuration
+    # Note: We override entrypoint because we need to run setup logic before starting daemon
+    # Our startup.sh calls 'exec /entry.sh daemon' at the end to properly start acme.sh
+    entrypoint: ["/scripts/startup.sh"]
+
+    environment:
+      # Cloudflare DNS API (only CF_Token is required)
+      - CF_Token=${CF_TOKEN}
+      - CF_Account_ID=${CF_ACCOUNT_ID:-}
+      - CF_Zone_ID=${CF_ZONE_ID:-}
+
+      # Domain configuration
+      - DOMAIN=${DOMAIN}
+      - WILDCARD_DOMAIN=${WILDCARD_DOMAIN}
+      - EMAIL=${EMAIL}
+
+      # Certificate configuration
+      - CERT_KEY_LENGTH=${CERT_KEY_LENGTH}
+      - CA_SERVER=${CA_SERVER:-letsencrypt}
+
+      # Synology configuration
+      - SYNO_CERT_ID=${SYNO_CERT_ID}
+      - SYNO_CERT_ROOT=${SYNO_CERT_ROOT}
+      - SYNO_CERT_ARCHIVE=${SYNO_CERT_ARCHIVE}
+      - SYNO_CERT_DEFAULT=${SYNO_CERT_DEFAULT}
+
+      # Logging
+      - LOG_FILE=${LOG_FILE}
+      - LOG_LEVEL=${LOG_LEVEL}
+
+      # acme.sh configuration
+      - LE_CONFIG_HOME=/acme.sh
+      - AUTO_UPGRADE=1
+
+    volumes:
+      # Certificate storage (persistent)
+      - ${ACME_DATA_PATH}:/acme.sh
+
+      # Custom scripts
+      - ./scripts:/scripts:ro
+
+      # Synology certificate directory (read-write for deployment)
+      - /usr/syno/etc/certificate:/usr/syno/etc/certificate
+
+      # Logs
+      - ${LOGS_PATH}:/logs
+
+    # Optional: Network mode host if DNS resolution issues occur
+    # network_mode: host
