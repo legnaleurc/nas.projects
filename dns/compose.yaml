@@ -1,7 +1,7 @@
 services:
   dnsmasq:
     image: 4km3/dnsmasq
-    container_name: dnsmasq
+    container_name: dns
     ports:
       - "53:53/udp"
       - "53:53/tcp"
