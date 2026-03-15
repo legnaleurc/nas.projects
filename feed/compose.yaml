@@ -1,0 +1,14 @@
+services:
+  feed:
+    build:
+      context: .
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${FEED_CONFIG_FILE}:/mnt/feed.yaml:ro
+      - ${FEED_DATA_PATH}:/mnt/data:rw
+      - ${FEED_WATCH_PATH}:/mnt/watch:ro
+    ports:
+      - "${FEED_HOST}:${FEED_PORT}:8080"
+    # command: /app/.venv/bin/python3 -m wcpan.drive.feed --config=/mnt/feed.yaml
+    tty: true
+    stdin_open: true
