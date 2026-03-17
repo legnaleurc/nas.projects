@@ -18,6 +18,10 @@ services:
       retries: 30
       start_period: 1s
     restart: unless-stopped
+    logging:
+      driver: journald
+      options:
+        tag: portal-vpn
 
   admin:
     image: docker.io/alpine/socat:latest
@@ -27,6 +31,10 @@ services:
       vpn:
         condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: journald
+      options:
+        tag: portal-admin
 
   feed:
     image: docker.io/alpine/socat:latest
@@ -36,3 +44,7 @@ services:
       vpn:
         condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: journald
+      options:
+        tag: portal-feed
