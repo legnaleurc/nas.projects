@@ -1,0 +1,40 @@
+name: vpn-proxy
+
+services:
+  vpn:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ${OVPN_FILE}:/config/client.ovpn:ro
+    command: openvpn --config /config/client.ovpn
+    ports:
+      - "0.0.0.0:${HOST_PORT_ADMIN}:${HOST_PORT_ADMIN}/tcp"
+      - "0.0.0.0:${HOST_PORT_FEED}:${HOST_PORT_FEED}/tcp"
+    healthcheck:
+      test: ["CMD-SHELL", "ip link show tun0"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+      start_period: 1s
+    restart: unless-stopped
+
+  admin:
+    image: docker.io/alpine/socat:latest
+    network_mode: "service:vpn"
+    command: TCP-LISTEN:${HOST_PORT_ADMIN},fork,reuseaddr TCP:${TARGET_HOST_ADMIN}:${TARGET_PORT_ADMIN}
+    depends_on:
+      vpn:
+        condition: service_healthy
+    restart: unless-stopped
+
+  feed:
+    image: docker.io/alpine/socat:latest
+    network_mode: "service:vpn"
+    command: TCP-LISTEN:${HOST_PORT_FEED},fork,reuseaddr TCP:${TARGET_HOST_FEED}:${TARGET_PORT_FEED}
+    depends_on:
+      vpn:
+        condition: service_healthy
+    restart: unless-stopped
