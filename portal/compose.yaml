@@ -1,5 +1,3 @@
-name: vpn-proxy
-
 services:
   vpn:
     build: .
