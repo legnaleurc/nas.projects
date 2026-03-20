@@ -8,6 +8,8 @@ RUN apt-get update && \
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV UV_SYSTEM_PYTHON=1
+ENV UV_NO_BINARY_PACKAGE=pymediainfo
 
 # Create mount points
 RUN mkdir -p /mnt/config /mnt/data /mnt/storage
