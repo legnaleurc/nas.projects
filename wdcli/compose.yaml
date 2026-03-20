@@ -7,7 +7,6 @@ services:
       - ${CONFIG_PATH}:/mnt/config:ro
       - ${DATA_PATH}:/mnt/data:rw
       - ${STORAGE_PATH}:/mnt/storage:rw
-    user: "${UID}:${GID}"
     command: sleep infinity
     environment:
       - TZ=${TZ:-UTC}
