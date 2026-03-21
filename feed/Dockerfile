@@ -3,7 +3,7 @@ FROM python:3.14-slim-trixie
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    libmagic1t64 libmediainfo0v5 && \
+    libmagic1t64 libmediainfo0v5 git && \
     rm -rf /var/lib/apt/lists/*
 
 # Install uv
