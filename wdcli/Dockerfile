@@ -14,9 +14,9 @@ ENV UV_NO_BINARY_PACKAGE=pymediainfo
 # Create mount points and writable cache for arbitrary runtime UID/GID
 RUN mkdir -p /mnt/config /mnt/data /mnt/storage
 
-# Copy the wdcli script
-COPY scripts/wdcli /usr/local/bin/wdcli
-RUN chmod +x /usr/local/bin/wdcli
+# Copy scripts
+COPY scripts/ /usr/local/bin/
+RUN chmod +x /usr/local/bin/wdcli /usr/local/bin/itsame
 
 # Set working directory
 WORKDIR /app
