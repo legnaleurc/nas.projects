@@ -5,5 +5,5 @@ exec uvx \
   --isolated \
   --from "wcpan-drive-feed[inotify]" \
   -- \
-  wcpan.drive.feed \
+  wcpan.drive.feed serve\
     --config=/mnt/feed.yaml
