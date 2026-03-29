@@ -7,4 +7,4 @@ exec uvx \
   -- \
   wcpan.drive.feed \
     --config=/mnt/feed.yaml \
-    serve
+    "$@"
