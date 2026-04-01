@@ -16,4 +16,6 @@ WORKDIR /app
 
 # Copy the wdcli script
 COPY scripts/feed.sh /app/feed.sh
-RUN chmod +x /app/feed.sh
+COPY scripts/rehash.sh /app/rehash.sh
+COPY scripts/rehash.py /app/rehash.py
+RUN chmod +x /app/feed.sh /app/rehash.sh

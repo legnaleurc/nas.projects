@@ -5,6 +5,7 @@ services:
       context: .
     volumes:
       - ${FEED_CONFIG_FILE}:/mnt/feed.yaml:ro
+      - ${FEED_SYNOLOGY_CONFIG_FILE}:/mnt/synology.yaml:ro
       - ${FEED_DATA_PATH}:/mnt/data:rw
       - ${FEED_WATCH_PATH}:/mnt/watch:ro
     ports:
@@ -12,4 +13,6 @@ services:
     environment:
       TZ: "Asia/Tokyo"
     restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: /app/feed.sh serve
