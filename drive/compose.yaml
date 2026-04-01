@@ -1,0 +1,17 @@
+services:
+  drive:
+    container_name: drive
+    build:
+      context: .
+    volumes:
+      - ${DRIVE_CONFIG_FILE}:/mnt/drive.yaml:ro
+      - ${DRIVE_DATA_PATH}:/mnt/data:rw
+      - ${DRIVE_WATCH_PATH}:/mnt/watch:ro
+    ports:
+      - "${DRIVE_HOST}:${DRIVE_PORT}:8080"
+    environment:
+      TZ: "Asia/Tokyo"
+    restart: on-failure
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: /app/drive.sh serve
