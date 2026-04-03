@@ -26,7 +26,7 @@ services:
   admin:
     image: docker.io/alpine/socat:latest
     network_mode: "service:vpn"
-    command: TCP-LISTEN:${HOST_PORT_ADMIN},fork,reuseaddr TCP:${TARGET_HOST_ADMIN}:${TARGET_PORT_ADMIN}
+    command: TCP-LISTEN:${HOST_PORT_ADMIN},fork,reuseaddr,keepalive,keepidle=60,keepintvl=10,keepcnt=6,nodelay,max-children=10 TCP:${TARGET_HOST_ADMIN}:${TARGET_PORT_ADMIN},keepalive,keepidle=60,keepintvl=10,keepcnt=6,nodelay,connect-timeout=10
     depends_on:
       vpn:
         condition: service_healthy
@@ -39,7 +39,7 @@ services:
   feed:
     image: docker.io/alpine/socat:latest
     network_mode: "service:vpn"
-    command: TCP-LISTEN:${HOST_PORT_FEED},fork,reuseaddr TCP:${TARGET_HOST_FEED}:${TARGET_PORT_FEED}
+    command: TCP-LISTEN:${HOST_PORT_FEED},fork,reuseaddr,keepalive,keepidle=60,keepintvl=10,keepcnt=6,max-children=5 TCP:${TARGET_HOST_FEED}:${TARGET_PORT_FEED},keepalive,keepidle=60,keepintvl=10,keepcnt=6,connect-timeout=10
     depends_on:
       vpn:
         condition: service_healthy
