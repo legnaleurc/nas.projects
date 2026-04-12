@@ -18,7 +18,7 @@ if [ "$1" = "--dry-run" ]; then
 fi
 
 # Function: syno_restart_service()
-# Restarts a Synology service using synoservicectl (available on the NAS host).
+# Restarts a Synology service using synosystemctl (available on the NAS host).
 syno_restart_service() {
     service=$1
 
@@ -28,7 +28,7 @@ syno_restart_service() {
     fi
 
     log "info" "Attempting to restart: $service"
-    if synoservicectl --restart "$service" 2>/dev/null; then
+    if synosystemctl restart "$service" 2>/dev/null; then
         log "info" "  ✓ Restarted successfully"
         return 0
     else
@@ -43,13 +43,13 @@ restarted_services=0
 skipped_services=0
 failed_services=0
 
-# Reload DSM nginx using synoservicectl
+# Reload DSM nginx using synosystemctl
 log "info" "Reloading nginx..."
 total_services=$((total_services + 1))
 if [ "$DRY_RUN" = "true" ]; then
     log "info" "[DRY RUN] Would reload: nginx"
     skipped_services=$((skipped_services + 1))
-elif synoservicectl --reload nginx 2>/dev/null; then
+elif synosystemctl reload nginx 2>/dev/null; then
     log "info" "  ✓ nginx reloaded"
     restarted_services=$((restarted_services + 1))
 else
@@ -68,7 +68,7 @@ OPTIONAL_SERVICES="smbdav ftpd sshd avahi-daemon"
 log "info" "Checking optional services..."
 for service in $OPTIONAL_SERVICES; do
     total_services=$((total_services + 1))
-    if synoservicectl --status "$service" 2>/dev/null | grep -q "running"; then
+    if synosystemctl get-active-status "$service" 2>/dev/null | grep -q "active"; then
         if syno_restart_service "$service"; then
             restarted_services=$((restarted_services + 1))
         else
