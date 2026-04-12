@@ -37,6 +37,9 @@ services:
       - LOG_FILE=${LOG_FILE}
       - LOG_LEVEL=${LOG_LEVEL}
 
+      # Make Synology binaries accessible in PATH
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/syno/bin
+
       # acme.sh configuration
       - LE_CONFIG_HOME=/acme.sh
       - AUTO_UPGRADE=1
@@ -50,6 +53,11 @@ services:
 
       # Synology certificate directory (read-write for deployment)
       - /usr/syno/etc/certificate:/usr/syno/etc/certificate
+
+      # Synology service control binaries (needed to restart DSM services after cert update)
+      - /usr/syno/bin/synoservicectl:/usr/syno/bin/synoservicectl:ro
+      - /usr/syno/bin/synowebapi:/usr/syno/bin/synowebapi:ro
+      - /run/synoscgi.sock:/run/synoscgi.sock
 
       # Logs
       - ${LOGS_PATH}:/logs
