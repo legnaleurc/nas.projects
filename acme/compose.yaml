@@ -52,6 +52,9 @@ services:
       # Synology certificate directory (read-write for deployment)
       - /usr/syno/etc/certificate:/usr/syno/etc/certificate
 
+      # nginx PID file — needed to send SIGHUP for cert reload (requires pid:host)
+      - /run/nginx.pid:/run/nginx.pid:ro
+
       # Logs
       - ${LOGS_PATH}:/logs
 
