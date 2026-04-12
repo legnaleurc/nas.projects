@@ -55,7 +55,7 @@ services:
       - /usr/syno/etc/certificate:/usr/syno/etc/certificate
 
       # Synology service control binaries (needed to restart DSM services after cert update)
-      - /usr/syno/bin/synoservicectl:/usr/syno/bin/synoservicectl:ro
+      - /usr/syno/bin/synosystemctl:/usr/syno/bin/synosystemctl:ro
       - /usr/syno/bin/synowebapi:/usr/syno/bin/synowebapi:ro
       - /run/synoscgi.sock:/run/synoscgi.sock
 
