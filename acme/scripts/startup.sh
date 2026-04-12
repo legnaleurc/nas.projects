@@ -92,32 +92,34 @@ if [ "$CERT_EXISTS" = true ]; then
     DOMAIN_CONF="/acme.sh/$DOMAIN/$DOMAIN.conf"
 
     if [ -f "$DOMAIN_CONF" ]; then
-        # Check if deploy hook is already set
+        # Remove Le_DeployHook if present (sourced by acme.sh — causes exit/set -e issues)
         if grep -q "^Le_DeployHook=" "$DOMAIN_CONF"; then
-            CURRENT_HOOK=$(grep "^Le_DeployHook=" "$DOMAIN_CONF" | cut -d"'" -f2)
-            log "info" "✓ Deploy hook already registered: $CURRENT_HOOK"
+            sed "/^Le_DeployHook=/d" "$DOMAIN_CONF" > "$DOMAIN_CONF.tmp"
+            mv "$DOMAIN_CONF.tmp" "$DOMAIN_CONF"
+            log "info" "Removed Le_DeployHook (replaced by Le_RenewHook)"
+        fi
 
-            # Check if it's our hook
-            if [ "$CURRENT_HOOK" = "/scripts/deploy-to-synology.sh" ]; then
-                log "info" "✓ Using correct deploy hook"
-            else
-                log "warn" "✗ Deploy hook is different, updating..."
-                # Update the hook in config file (use temp file for portability)
-                sed "s|^Le_DeployHook=.*|Le_DeployHook='/scripts/deploy-to-synology.sh'|" "$DOMAIN_CONF" > "$DOMAIN_CONF.tmp"
+        # Use Le_RenewHook: acme.sh runs this as a subprocess after successful renewal
+        if grep -q "^Le_RenewHook=" "$DOMAIN_CONF"; then
+            CURRENT_HOOK=$(grep "^Le_RenewHook=" "$DOMAIN_CONF" | cut -d"'" -f2)
+            log "info" "✓ Renew hook already registered: $CURRENT_HOOK"
+            if [ "$CURRENT_HOOK" != "sh /scripts/deploy-to-synology.sh" ]; then
+                log "warn" "✗ Renew hook is different, updating..."
+                sed "s|^Le_RenewHook=.*|Le_RenewHook='sh /scripts/deploy-to-synology.sh'|" "$DOMAIN_CONF" > "$DOMAIN_CONF.tmp"
                 mv "$DOMAIN_CONF.tmp" "$DOMAIN_CONF"
-                log "info" "✓ Deploy hook updated in certificate config"
+                log "info" "✓ Renew hook updated"
+            else
+                log "info" "✓ Using correct renew hook"
             fi
         else
-            log "warn" "✗ Deploy hook not registered"
-            log "info" "Registering deploy hook in certificate config..."
-
-            # Add deploy hook to config file
-            echo "Le_DeployHook='/scripts/deploy-to-synology.sh'" >> "$DOMAIN_CONF"
-            log "info" "✓ Deploy hook registered successfully"
+            log "warn" "✗ Renew hook not registered"
+            log "info" "Registering renew hook in certificate config..."
+            echo "Le_RenewHook='sh /scripts/deploy-to-synology.sh'" >> "$DOMAIN_CONF"
+            log "info" "✓ Renew hook registered successfully"
         fi
     else
         log "warn" "Certificate config file not found: $DOMAIN_CONF"
-        log "warn" "Deploy hook will not be registered"
+        log "warn" "Renew hook will not be registered"
     fi
 else
     log "warn" "Certificate doesn't exist yet, skipping deploy hook registration"

@@ -2,7 +2,7 @@
 # Custom deploy hook for Synology NAS
 # Called automatically by acme.sh after certificate renewal
 
-set -e  # Exit on error
+set -e  # Exit immediately on error — script runs as a subprocess so this is safe
 
 # Source utility functions
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,10 +21,23 @@ if [ -z "$SYNO_CERT_ID" ]; then
     exit 1
 fi
 
-# Validate required environment variables from acme.sh
+# Le_RenewHook does not pass cert paths as env vars — derive them from the acme.sh data directory
+if [ -z "$CERT_PATH" ]; then
+    if [ -z "$DOMAIN" ]; then
+        log "error" "Neither CERT_PATH nor DOMAIN is set — cannot locate certificate files"
+        exit 1
+    fi
+    ACME_DIR="${LE_CONFIG_HOME:-/acme.sh}/$DOMAIN"
+    CERT_PATH="$ACME_DIR/$DOMAIN.cer"
+    CERT_KEY_PATH="$ACME_DIR/$DOMAIN.key"
+    CERT_FULLCHAIN_PATH="$ACME_DIR/fullchain.cer"
+    CA_CERT_PATH="$ACME_DIR/ca.cer"
+    log "info" "Derived cert paths from DOMAIN=$DOMAIN"
+fi
+
+# Validate cert files exist
 if ! validate_env CERT_PATH CERT_KEY_PATH CA_CERT_PATH CERT_FULLCHAIN_PATH; then
-    log "error" "Missing certificate path variables from acme.sh"
-    log "error" "This script should be called by acme.sh deploy hook"
+    log "error" "Missing certificate path variables"
     exit 1
 fi
 
