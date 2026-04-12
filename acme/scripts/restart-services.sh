@@ -17,68 +17,35 @@ if [ "$1" = "--dry-run" ]; then
     echo ""
 fi
 
-# Function: syno_restart_service()
-# Restarts a Synology service using synosystemctl (available on the NAS host).
-syno_restart_service() {
-    service=$1
-
-    if [ "$DRY_RUN" = "true" ]; then
-        log "info" "[DRY RUN] Would restart: $service"
-        return 0
-    fi
-
-    log "info" "Attempting to restart: $service"
-    if synosystemctl restart "$service" 2>/dev/null; then
-        log "info" "  ✓ Restarted successfully"
-        return 0
-    else
-        log "error" "  ✗ Restart failed"
-        return 1
-    fi
-}
-
 # Counter for statistics
 total_services=0
 restarted_services=0
 skipped_services=0
 failed_services=0
 
-# Reload DSM nginx using synosystemctl
+# Reload nginx by sending SIGHUP to its master process.
+# Requires pid:host in compose.yaml so the container can see and signal host processes.
 log "info" "Reloading nginx..."
 total_services=$((total_services + 1))
 if [ "$DRY_RUN" = "true" ]; then
-    log "info" "[DRY RUN] Would reload: nginx"
+    log "info" "[DRY RUN] Would send SIGHUP to nginx"
     skipped_services=$((skipped_services + 1))
-elif synosystemctl reload nginx 2>/dev/null; then
-    log "info" "  ✓ nginx reloaded"
-    restarted_services=$((restarted_services + 1))
 else
-    log "warn" "  ✗ nginx reload failed, trying restart..."
-    if syno_restart_service nginx; then
-        restarted_services=$((restarted_services + 1))
-    else
-        failed_services=$((failed_services + 1))
-    fi
-fi
-echo ""
-
-# Optional services that may use the certificate
-OPTIONAL_SERVICES="smbdav ftpd sshd avahi-daemon"
-
-log "info" "Checking optional services..."
-for service in $OPTIONAL_SERVICES; do
-    total_services=$((total_services + 1))
-    if synosystemctl get-active-status "$service" 2>/dev/null | grep -q "active"; then
-        if syno_restart_service "$service"; then
+    NGINX_PID=$(cat /run/nginx.pid 2>/dev/null || cat /var/run/nginx.pid 2>/dev/null || echo "")
+    if [ -n "$NGINX_PID" ]; then
+        if kill -HUP "$NGINX_PID" 2>/dev/null; then
+            log "info" "  ✓ nginx reloaded (pid $NGINX_PID)"
             restarted_services=$((restarted_services + 1))
         else
+            log "error" "  ✗ Failed to send SIGHUP to nginx (pid $NGINX_PID)"
             failed_services=$((failed_services + 1))
         fi
     else
-        log "debug" "Service not running or not installed: $service (skipping)"
-        skipped_services=$((skipped_services + 1))
+        log "error" "  ✗ nginx PID file not found at /run/nginx.pid or /var/run/nginx.pid"
+        log "error" "  Check that pid:host is set in compose.yaml"
+        failed_services=$((failed_services + 1))
     fi
-done
+fi
 echo ""
 
 # Summary
