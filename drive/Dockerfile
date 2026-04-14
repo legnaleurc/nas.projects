@@ -10,10 +10,3 @@ RUN apt-get update && \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 ENV UV_SYSTEM_PYTHON=1
 ENV UV_NO_BINARY_PACKAGE=pymediainfo
-
-# Set working directory
-WORKDIR /app
-
-# Copy the wdcli script
-COPY scripts/drive.sh /app/drive.sh
-RUN chmod +x /app/drive.sh
