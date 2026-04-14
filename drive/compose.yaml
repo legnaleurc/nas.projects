@@ -15,4 +15,4 @@ services:
     restart: on-failure
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: /app/drive.sh serve
+    command: drive.sh serve
