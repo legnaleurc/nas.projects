@@ -1,18 +1,24 @@
 services:
   dnsmasq:
-    image: 4km3/dnsmasq
+    image: dockurr/dnsmasq
     container_name: dns
-    ports:
-      - "53:53/udp"
-      - "53:53/tcp"
+    env_file:
+      - .env
     volumes:
-      - ./dnsmasq.conf:/etc/dnsmasq.conf:ro
+      - ./dnsmasq.d:/etc/dnsmasq.d:ro
+    ports:
+      - "${DNS_HOST_BIND_ADDRESS}:53:53/udp"
+      - "${DNS_HOST_BIND_ADDRESS}:53:53/tcp"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
     networks:
-      - dns-network
+      dns-network:
+        ipv4_address: ${DNS_CONTAINER_ADDRESS}
 
 networks:
   dns-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${DNS_NETWORK_SUBNET}
