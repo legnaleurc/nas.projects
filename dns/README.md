@@ -11,14 +11,31 @@ This Docker Compose project sets up dnsmasq for local DNS resolution with split-
 
 ### 1. Edit Configuration
 
-Edit `dnsmasq.conf` and replace the placeholder:
+Copy the example environment file if needed:
 ```bash
-address=/nas.example.com/192.168.0.x
+cp .env.example .env
 ```
 
-Replace:
-- `nas.example.com` with your actual domain
-- `192.168.0.x` with your NAS's actual local IP address
+Then edit `.env`:
+```bash
+DNS_HOST_BIND_ADDRESS=192.168.0.x
+DNS_CONTAINER_ADDRESS=172.29.0.2
+DNS_NETWORK_SUBNET=172.29.0.0/24
+DNS1=1.1.1.1
+DNS2=8.8.8.8
+```
+
+The real `.env` file is local-only; commit changes to `.env.example` when adding new variables.
+
+`DNS_HOST_BIND_ADDRESS` controls the Docker host-side port binding, so DNS is not published on every host interface.
+`DNS_CONTAINER_ADDRESS` must match the address in `dnsmasq.d/00-listen.conf`, because dnsmasq runs inside the container.
+
+Custom dnsmasq settings live in `dnsmasq.d/*.conf`.
+Update `dnsmasq.d/10-local.conf` for local DNS records:
+```conf
+address=/nas.example.com/192.168.0.x
+address=/nas.example.com/
+```
 
 ### 2. Deploy on Synology NAS
 
@@ -75,7 +92,7 @@ docker-compose up -d
 ### Port 53 already in use
 If Synology's DNS Server package is installed, it may be using port 53. Either:
 1. Stop/uninstall the DNS Server package
-2. Change the port mapping in docker-compose.yml
+2. Change the port mapping in `compose.yaml`
 
 ### DNS not resolving
 1. Check if container is running: `docker-compose ps`
