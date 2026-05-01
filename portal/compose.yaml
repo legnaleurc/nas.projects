@@ -12,11 +12,11 @@ services:
       - "0.0.0.0:${HOST_PORT_ADMIN}:${HOST_PORT_ADMIN}/tcp"
       - "0.0.0.0:${HOST_PORT_FEED}:${HOST_PORT_FEED}/tcp"
     healthcheck:
-      test: ["CMD-SHELL", "ip link show tun0"]
-      interval: 1s
-      timeout: 1s
+      test: ["CMD-SHELL", "pidof openvpn >/dev/null && ip link show tun0 >/dev/null"]
+      interval: 30s
+      timeout: 5s
       retries: 30
-      start_period: 1s
+      start_period: 30s
     restart: unless-stopped
     logging:
       driver: journald
