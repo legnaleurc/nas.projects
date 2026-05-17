@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Filters</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body>
+    <main class="container" x-data="filterApp()">
+      <h1>Filters</h1>
+
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
+        <input
+          x-model="newRegexp"
+          @keydown.enter="add()"
+          placeholder="New regexp pattern"
+          style="flex: 1; margin-bottom: 0"
+        />
+        <button @click="add()" :disabled="!newRegexp.trim()">Add</button>
+      </div>
+
+      <p x-show="filters.length === 0">No filters configured.</p>
+
+      <table x-show="filters.length > 0">
+        <tbody>
+          <template x-for="f in filters" :key="f.id">
+            <tr>
+              <td>
+                <span x-show="editing !== f.id" x-text="f.regexp"></span>
+                <input
+                  x-show="editing === f.id"
+                  x-model="editRegexp"
+                  @keydown.enter="save(f.id)"
+                  @keydown.escape="editing = null"
+                  style="width: 100%; margin-bottom: 0"
+                />
+              </td>
+              <td style="width: 1%; white-space: nowrap">
+                <button
+                  x-show="editing !== f.id"
+                  @click="startEdit(f)"
+                  class="outline"
+                  style="margin-bottom: 0"
+                >
+                  Edit
+                </button>
+                <button
+                  x-show="editing === f.id"
+                  @click="save(f.id)"
+                  style="margin-bottom: 0"
+                >
+                  Save
+                </button>
+                <button
+                  x-show="editing === f.id"
+                  @click="editing = null"
+                  class="outline"
+                  style="margin-bottom: 0"
+                >
+                  Cancel
+                </button>
+                <button
+                  @click="remove(f.id)"
+                  class="secondary"
+                  style="margin-bottom: 0"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </main>
+
+    <script>
+      function filterApp() {
+        return {
+          filters: [],
+          newRegexp: "",
+          editing: null,
+          editRegexp: "",
+
+          async init() {
+            await this.reload();
+          },
+
+          async reload() {
+            const r = await fetch("/api/v1/filters");
+            this.filters = await r.json();
+          },
+
+          async add() {
+            const regexp = this.newRegexp.trim();
+            if (!regexp) return;
+            await fetch("/api/v1/filters", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ regexp }),
+            });
+            this.newRegexp = "";
+            await this.reload();
+          },
+
+          startEdit(f) {
+            this.editing = f.id;
+            this.editRegexp = f.regexp;
+          },
+
+          async save(id) {
+            const regexp = this.editRegexp.trim();
+            if (!regexp) return;
+            await fetch(`/api/v1/filters/${id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ regexp }),
+            });
+            this.editing = null;
+            await this.reload();
+          },
+
+          async remove(id) {
+            await fetch(`/api/v1/filters/${id}`, { method: "DELETE" });
+            await this.reload();
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
