@@ -134,6 +134,7 @@
                   </span>
                 </button>
                 <button
+                  x-show="editing !== f.id"
                   @click="remove(f.id)"
                   class="secondary icon-button"
                   :disabled="busy"
