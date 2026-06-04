@@ -155,55 +155,23 @@
         <template x-for="f in filters" :key="f.id">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem">
             <div style="flex: 1; min-width: 0">
-              <span x-show="editing !== f.id" x-text="f.regexp"></span>
               <input
-                x-show="editing === f.id"
-                x-model="editRegexp"
-                @keydown.enter="save(f.id)"
-                @keydown.escape="cancelEdit()"
+                x-model="editValues[f.id]"
+                @keydown.enter="commitEdit(f)"
+                placeholder="Delete filter"
                 style="width: 100%"
               />
             </div>
-            <div style="display: flex; gap: 0.25rem; flex-shrink: 0">
+            <div style="flex-shrink: 0">
               <button
-                x-show="editing !== f.id"
-                @click="startEdit(f)"
-                class="outline icon-button"
-                :disabled="busy"
-                aria-label="Edit"
-                title="Edit"
-              >
-                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-              </button>
-              <button
-                x-show="editing === f.id"
-                @click="save(f.id)"
                 class="icon-button"
-                :disabled="busy || !editRegexp.trim()"
-                aria-label="Save"
-                title="Save"
+                :class="{ secondary: !editValues[f.id]?.trim() }"
+                @click="commitEdit(f)"
+                :disabled="busy || editValues[f.id] === f.regexp"
               >
-                <span class="material-symbols-outlined" aria-hidden="true">save</span>
-              </button>
-              <button
-                x-show="editing === f.id"
-                @click="cancelEdit()"
-                class="outline icon-button"
-                :disabled="busy"
-                aria-label="Cancel"
-                title="Cancel"
-              >
-                <span class="material-symbols-outlined" aria-hidden="true">close</span>
-              </button>
-              <button
-                x-show="editing !== f.id"
-                @click="remove(f.id)"
-                class="secondary icon-button"
-                :disabled="busy"
-                aria-label="Delete"
-                title="Delete"
-              >
-                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                <span class="material-symbols-outlined" aria-hidden="true"
+                  x-text="editValues[f.id]?.trim() ? 'save' : 'delete'">
+                </span>
               </button>
             </div>
           </div>
@@ -215,14 +183,27 @@
       function filterApp() {
         return {
           filters: [],
+          editValues: {},
           newRegexp: "",
-          editing: null,
-          editRegexp: "",
           error: "",
           busy: false,
 
           async init() {
             await this.reload();
+          },
+
+          syncEditValues() {
+            const next = {};
+            for (const f of this.filters) {
+              next[f.id] = f.regexp;
+            }
+            this.editValues = next;
+          },
+
+          commitEdit(f) {
+            const val = this.editValues[f.id];
+            if (val === f.regexp) return;
+            val.trim() ? this.save(f.id) : this.remove(f.id);
           },
 
           async request(path, options = {}) {
@@ -257,6 +238,7 @@
           async reload() {
             await this.run(async () => {
               this.filters = await this.request("/api/v1/filters");
+              this.syncEditValues();
             });
           },
 
@@ -271,21 +253,12 @@
               });
               this.newRegexp = "";
               this.filters = await this.request("/api/v1/filters");
+              this.syncEditValues();
             });
           },
 
-          startEdit(f) {
-            this.editing = f.id;
-            this.editRegexp = f.regexp;
-          },
-
-          cancelEdit() {
-            this.editing = null;
-            this.editRegexp = "";
-          },
-
           async save(id) {
-            const regexp = this.editRegexp.trim();
+            const regexp = this.editValues[id]?.trim();
             if (!regexp) return;
             await this.run(async () => {
               await this.request(`/api/v1/filters/${id}`, {
@@ -293,8 +266,8 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ regexp }),
               });
-              this.cancelEdit();
               this.filters = await this.request("/api/v1/filters");
+              this.syncEditValues();
             });
           },
 
@@ -302,6 +275,7 @@
             await this.run(async () => {
               await this.request(`/api/v1/filters/${id}`, { method: "DELETE" });
               this.filters = await this.request("/api/v1/filters");
+              this.syncEditValues();
             });
           },
         };
