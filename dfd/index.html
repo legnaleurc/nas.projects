@@ -44,7 +44,6 @@
       }
 
       input {
-        height: 2.5rem;
         margin-bottom: 0;
       }
     </style>
@@ -87,74 +86,64 @@
       <p x-show="busy && filters.length === 0">Loading...</p>
       <p x-show="!busy && filters.length === 0">No filters configured.</p>
 
-      <table x-show="filters.length > 0">
-        <tbody>
-          <template x-for="f in filters" :key="f.id">
-            <tr>
-              <td>
-                <span x-show="editing !== f.id" x-text="f.regexp"></span>
-                <input
-                  x-show="editing === f.id"
-                  x-model="editRegexp"
-                  @keydown.enter="save(f.id)"
-                  @keydown.escape="cancelEdit()"
-                  style="width: 100%"
-                />
-              </td>
-              <td style="width: 1%; white-space: nowrap">
-                <button
-                  x-show="editing !== f.id"
-                  @click="startEdit(f)"
-                  class="outline icon-button"
-                  :disabled="busy"
-                  aria-label="Edit"
-                  title="Edit"
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">
-                    edit
-                  </span>
-                </button>
-                <button
-                  x-show="editing === f.id"
-                  @click="save(f.id)"
-                  class="icon-button"
-                  :disabled="busy || !editRegexp.trim()"
-                  aria-label="Save"
-                  title="Save"
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">
-                    save
-                  </span>
-                </button>
-                <button
-                  x-show="editing === f.id"
-                  @click="cancelEdit()"
-                  class="outline icon-button"
-                  :disabled="busy"
-                  aria-label="Cancel"
-                  title="Cancel"
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">
-                    close
-                  </span>
-                </button>
-                <button
-                  x-show="editing !== f.id"
-                  @click="remove(f.id)"
-                  class="secondary icon-button"
-                  :disabled="busy"
-                  aria-label="Delete"
-                  title="Delete"
-                >
-                  <span class="material-symbols-outlined" aria-hidden="true">
-                    delete
-                  </span>
-                </button>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+      <div x-show="filters.length > 0">
+        <template x-for="f in filters" :key="f.id">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem">
+            <div style="flex: 1; min-width: 0">
+              <span x-show="editing !== f.id" x-text="f.regexp"></span>
+              <input
+                x-show="editing === f.id"
+                x-model="editRegexp"
+                @keydown.enter="save(f.id)"
+                @keydown.escape="cancelEdit()"
+                style="width: 100%"
+              />
+            </div>
+            <div style="display: flex; gap: 0.25rem; flex-shrink: 0">
+              <button
+                x-show="editing !== f.id"
+                @click="startEdit(f)"
+                class="outline icon-button"
+                :disabled="busy"
+                aria-label="Edit"
+                title="Edit"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+              </button>
+              <button
+                x-show="editing === f.id"
+                @click="save(f.id)"
+                class="icon-button"
+                :disabled="busy || !editRegexp.trim()"
+                aria-label="Save"
+                title="Save"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">save</span>
+              </button>
+              <button
+                x-show="editing === f.id"
+                @click="cancelEdit()"
+                class="outline icon-button"
+                :disabled="busy"
+                aria-label="Cancel"
+                title="Cancel"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+              <button
+                x-show="editing !== f.id"
+                @click="remove(f.id)"
+                class="secondary icon-button"
+                :disabled="busy"
+                aria-label="Delete"
+                title="Delete"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
     </main>
 
     <script>
