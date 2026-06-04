@@ -42,6 +42,11 @@
         padding: 0;
         width: 2.5rem;
       }
+
+      input {
+        height: 2.5rem;
+        margin-bottom: 0;
+      }
     </style>
   </head>
   <body>
@@ -66,7 +71,7 @@
           x-model="newRegexp"
           @keydown.enter="add()"
           placeholder="New regexp pattern"
-          style="flex: 1; margin-bottom: 0"
+          style="flex: 1"
         />
         <button
           class="icon-button"
@@ -93,7 +98,7 @@
                   x-model="editRegexp"
                   @keydown.enter="save(f.id)"
                   @keydown.escape="cancelEdit()"
-                  style="width: 100%; margin-bottom: 0"
+                  style="width: 100%"
                 />
               </td>
               <td style="width: 1%; white-space: nowrap">
