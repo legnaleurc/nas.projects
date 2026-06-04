@@ -17,6 +17,13 @@
     <main class="container" x-data="filterApp()">
       <h1>Filters</h1>
 
+      <article x-show="error" style="border-color: var(--pico-del-color)">
+        <span x-text="error"></span>
+        <button class="secondary" @click="error = ''" style="float: right">
+          Dismiss
+        </button>
+      </article>
+
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem">
         <input
           x-model="newRegexp"
@@ -24,10 +31,11 @@
           placeholder="New regexp pattern"
           style="flex: 1; margin-bottom: 0"
         />
-        <button @click="add()" :disabled="!newRegexp.trim()">Add</button>
+        <button @click="add()" :disabled="busy || !newRegexp.trim()">Add</button>
       </div>
 
-      <p x-show="filters.length === 0">No filters configured.</p>
+      <p x-show="busy && filters.length === 0">Loading...</p>
+      <p x-show="!busy && filters.length === 0">No filters configured.</p>
 
       <table x-show="filters.length > 0">
         <tbody>
@@ -39,7 +47,7 @@
                   x-show="editing === f.id"
                   x-model="editRegexp"
                   @keydown.enter="save(f.id)"
-                  @keydown.escape="editing = null"
+                  @keydown.escape="cancelEdit()"
                   style="width: 100%; margin-bottom: 0"
                 />
               </td>
@@ -49,6 +57,7 @@
                   @click="startEdit(f)"
                   class="outline"
                   style="margin-bottom: 0"
+                  :disabled="busy"
                 >
                   Edit
                 </button>
@@ -56,14 +65,16 @@
                   x-show="editing === f.id"
                   @click="save(f.id)"
                   style="margin-bottom: 0"
+                  :disabled="busy || !editRegexp.trim()"
                 >
                   Save
                 </button>
                 <button
                   x-show="editing === f.id"
-                  @click="editing = null"
+                  @click="cancelEdit()"
                   class="outline"
                   style="margin-bottom: 0"
+                  :disabled="busy"
                 >
                   Cancel
                 </button>
@@ -71,6 +82,7 @@
                   @click="remove(f.id)"
                   class="secondary"
                   style="margin-bottom: 0"
+                  :disabled="busy"
                 >
                   Delete
                 </button>
@@ -88,26 +100,60 @@
           newRegexp: "",
           editing: null,
           editRegexp: "",
+          error: "",
+          busy: false,
 
           async init() {
             await this.reload();
           },
 
+          async request(path, options = {}) {
+            const response = await fetch(path, options);
+            if (!response.ok) {
+              throw new Error(await this.describeError(response));
+            }
+            if (response.status === 204) return null;
+            return await response.json();
+          },
+
+          async describeError(response) {
+            if (response.status === 400) return "Invalid filter pattern.";
+            if (response.status === 401) return "Authentication failed.";
+            if (response.status === 404) return "Filter not found.";
+            if (response.status === 409) return "Filter already exists.";
+            return `Request failed: ${response.status}`;
+          },
+
+          async run(action) {
+            this.error = "";
+            this.busy = true;
+            try {
+              await action();
+            } catch (e) {
+              this.error = e.message || String(e);
+            } finally {
+              this.busy = false;
+            }
+          },
+
           async reload() {
-            const r = await fetch("/api/v1/filters");
-            this.filters = await r.json();
+            await this.run(async () => {
+              this.filters = await this.request("/api/v1/filters");
+            });
           },
 
           async add() {
             const regexp = this.newRegexp.trim();
             if (!regexp) return;
-            await fetch("/api/v1/filters", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ regexp }),
+            await this.run(async () => {
+              await this.request("/api/v1/filters", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ regexp }),
+              });
+              this.newRegexp = "";
+              this.filters = await this.request("/api/v1/filters");
             });
-            this.newRegexp = "";
-            await this.reload();
           },
 
           startEdit(f) {
@@ -115,21 +161,30 @@
             this.editRegexp = f.regexp;
           },
 
+          cancelEdit() {
+            this.editing = null;
+            this.editRegexp = "";
+          },
+
           async save(id) {
             const regexp = this.editRegexp.trim();
             if (!regexp) return;
-            await fetch(`/api/v1/filters/${id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ regexp }),
+            await this.run(async () => {
+              await this.request(`/api/v1/filters/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ regexp }),
+              });
+              this.cancelEdit();
+              this.filters = await this.request("/api/v1/filters");
             });
-            this.editing = null;
-            await this.reload();
           },
 
           async remove(id) {
-            await fetch(`/api/v1/filters/${id}`, { method: "DELETE" });
-            await this.reload();
+            await this.run(async () => {
+              await this.request(`/api/v1/filters/${id}`, { method: "DELETE" });
+              this.filters = await this.request("/api/v1/filters");
+            });
           },
         };
       }

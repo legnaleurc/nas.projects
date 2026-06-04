@@ -6,8 +6,5 @@ services:
       - "${DFD_HOST}:${DFD_PORT}:80"
     environment:
       DULD_API_URL: "${DULD_API_URL}"
+      DULD_API_AUTHORIZATION: "${DULD_API_AUTHORIZATION}"
     restart: on-failure
-    logging:
-      driver: journald
-      options:
-        tag: dfd-dfd
