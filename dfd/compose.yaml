@@ -1,7 +1,7 @@
 services:
   dfd:
     container_name: dfd
-    image: docker.io/library/nginx:alpine
+    image: docker.io/library/nginx:stable-alpine-slim
     ports:
       - "${DFD_HOST}:${DFD_PORT}:80"
     environment:
