@@ -8,10 +8,41 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"
     ></script>
+    <style>
+      .material-symbols-outlined {
+        font-family: "Material Symbols Outlined";
+        font-weight: normal;
+        font-style: normal;
+        font-size: 1.25rem;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: "liga";
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .icon-button {
+        align-items: center;
+        display: inline-flex;
+        height: 2.5rem;
+        justify-content: center;
+        margin-bottom: 0;
+        padding: 0;
+        width: 2.5rem;
+      }
+    </style>
   </head>
   <body>
     <main class="container" x-data="filterApp()">
@@ -19,8 +50,14 @@
 
       <article x-show="error" style="border-color: var(--pico-del-color)">
         <span x-text="error"></span>
-        <button class="secondary" @click="error = ''" style="float: right">
-          Dismiss
+        <button
+          class="secondary icon-button"
+          @click="error = ''"
+          style="float: right"
+          aria-label="Dismiss"
+          title="Dismiss"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
         </button>
       </article>
 
@@ -31,7 +68,15 @@
           placeholder="New regexp pattern"
           style="flex: 1; margin-bottom: 0"
         />
-        <button @click="add()" :disabled="busy || !newRegexp.trim()">Add</button>
+        <button
+          class="icon-button"
+          @click="add()"
+          :disabled="busy || !newRegexp.trim()"
+          aria-label="Add"
+          title="Add"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+        </button>
       </div>
 
       <p x-show="busy && filters.length === 0">Loading...</p>
@@ -55,36 +100,49 @@
                 <button
                   x-show="editing !== f.id"
                   @click="startEdit(f)"
-                  class="outline"
-                  style="margin-bottom: 0"
+                  class="outline icon-button"
                   :disabled="busy"
+                  aria-label="Edit"
+                  title="Edit"
                 >
-                  Edit
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    edit
+                  </span>
                 </button>
                 <button
                   x-show="editing === f.id"
                   @click="save(f.id)"
-                  style="margin-bottom: 0"
+                  class="icon-button"
                   :disabled="busy || !editRegexp.trim()"
+                  aria-label="Save"
+                  title="Save"
                 >
-                  Save
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    save
+                  </span>
                 </button>
                 <button
                   x-show="editing === f.id"
                   @click="cancelEdit()"
-                  class="outline"
-                  style="margin-bottom: 0"
+                  class="outline icon-button"
                   :disabled="busy"
+                  aria-label="Cancel"
+                  title="Cancel"
                 >
-                  Cancel
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    close
+                  </span>
                 </button>
                 <button
                   @click="remove(f.id)"
-                  class="secondary"
-                  style="margin-bottom: 0"
+                  class="secondary icon-button"
                   :disabled="busy"
+                  aria-label="Delete"
+                  title="Delete"
                 >
-                  Delete
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    delete
+                  </span>
                 </button>
               </td>
             </tr>
