@@ -94,6 +94,12 @@
       }
       button.secondary:hover:not(:disabled) { background: #f3f4f6; }
 
+      button.danger {
+        background: #ef4444;
+        color: #fff;
+      }
+      button.danger:hover:not(:disabled) { background: #dc2626; }
+
       .icon-button { padding: 0; width: 2.5rem; }
 
       .material-symbols-outlined {
@@ -165,7 +171,7 @@
             <div style="flex-shrink: 0">
               <button
                 class="icon-button"
-                :class="{ secondary: !editValues[f.id]?.trim() }"
+                :class="{ danger: !editValues[f.id]?.trim() }"
                 @click="commitEdit(f)"
                 :disabled="busy || editValues[f.id] === f.regexp"
               >
