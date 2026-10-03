@@ -7,6 +7,7 @@ services:
     environment:
       USER_ID: "${JDOWNLOADER_USER_ID:?Set the DSM user ID}"
       GROUP_ID: "${JDOWNLOADER_GROUP_ID:?Set the DSM group ID}"
+      SUP_GROUP_IDS: "${ADMINISTRATORS_GID}"
       TZ: "Asia/Tokyo"
     volumes:
       - ${JDOWNLOADER_CONFIG_PATH:?Set the configuration folder}:/config:rw
