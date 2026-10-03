@@ -1,0 +1,14 @@
+services:
+  jdownloader:
+    container_name: jdownloader
+    image: docker.io/jlesage/jdownloader-2:latest
+    ports:
+      - "${JDOWNLOADER_HOST:?Set the NAS LAN IP}:${JDOWNLOADER_PORT:-5800}:5800"
+    environment:
+      USER_ID: "${JDOWNLOADER_USER_ID:?Set the DSM user ID}"
+      GROUP_ID: "${JDOWNLOADER_GROUP_ID:?Set the DSM group ID}"
+      TZ: "Asia/Tokyo"
+    volumes:
+      - ${JDOWNLOADER_CONFIG_PATH:?Set the configuration folder}:/config:rw
+      - ${JDOWNLOADER_DOWNLOAD_PATH:?Set the download folder}:/output:rw
+    restart: unless-stopped
