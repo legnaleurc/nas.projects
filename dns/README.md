@@ -11,28 +11,26 @@ This Docker Compose project sets up dnsmasq for local DNS resolution with split-
 
 ### 1. Edit Configuration
 
-Copy the example environment file if needed:
+Copy the example environment file and dnsmasq config if needed:
 ```bash
 cp .env.example .env
+cp -r dnsmasq.d.example dnsmasq.d
 ```
 
 Then edit `.env`:
 ```bash
 DNS_CONFIG_PATH=/volume1/docker/dns/dnsmasq.d
 DNS_HOST_BIND_ADDRESS=192.168.0.x
-DNS_CONTAINER_ADDRESS=198.51.100.2
-DNS_NETWORK_SUBNET=198.51.100.0/24
-DNS1=1.1.1.1
-DNS2=8.8.8.8
 ```
 
-The real `.env` file is local-only; commit changes to `.env.example` when adding new variables.
+The real `.env` file and `dnsmasq.d/` folder are local-only; commit changes to `.env.example` and `dnsmasq.d.example/` instead.
 
 `DNS_HOST_BIND_ADDRESS` controls the Docker host-side port binding, so DNS is not published on every host interface.
-`DNS_CONTAINER_ADDRESS` is the container's fixed IP on the Docker network; dnsmasq must listen on it (`listen-address=` in your config).
+No listen settings are needed: the image's base config sets `interface=*`, which keeps dnsmasq from enabling `local-service` (that would drop LAN queries, since Docker keeps the client's source IP).
 
-`DNS_CONFIG_PATH` is the host folder mounted read-only at `/etc/dnsmasq.d`; every `*.conf` in it is loaded. `./dnsmasq.d` in this repo is a working sample.
-Do not mount `/etc/dnsmasq.conf` directly: the image only generates its config (including `server=$DNS1`/`$DNS2`) when that file is absent.
+`DNS_CONFIG_PATH` is the host folder mounted read-only at `/etc/dnsmasq.d`; every `*.conf` in it is loaded. `dnsmasq.d.example/` in this repo is a working sample; the local `dnsmasq.d/` copy is git-ignored.
+Set upstream DNS with `server=` lines in your config. Without any, the image falls back to its built-in `DNS1`/`DNS2` defaults (1.0.0.1, 1.1.1.1).
+Do not mount `/etc/dnsmasq.conf` directly: the image only generates its base config when that file is absent.
 
 ### 2. Deploy on Synology NAS
 

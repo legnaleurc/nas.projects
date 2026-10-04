@@ -2,8 +2,6 @@ services:
   dnsmasq:
     image: dockurr/dnsmasq
     container_name: dns
-    env_file:
-      - .env
     volumes:
       - ${DNS_CONFIG_PATH:?Set the dnsmasq.d folder}:/etc/dnsmasq.d:ro
     ports:
@@ -12,13 +10,3 @@ services:
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
-    networks:
-      dns-network:
-        ipv4_address: ${DNS_CONTAINER_ADDRESS}
-
-networks:
-  dns-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: ${DNS_NETWORK_SUBNET}
