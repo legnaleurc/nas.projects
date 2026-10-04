@@ -18,6 +18,7 @@ cp .env.example .env
 
 Then edit `.env`:
 ```bash
+DNS_CONFIG_PATH=/volume1/docker/dns/dnsmasq.d
 DNS_HOST_BIND_ADDRESS=192.168.0.x
 DNS_CONTAINER_ADDRESS=198.51.100.2
 DNS_NETWORK_SUBNET=198.51.100.0/24
@@ -28,14 +29,10 @@ DNS2=8.8.8.8
 The real `.env` file is local-only; commit changes to `.env.example` when adding new variables.
 
 `DNS_HOST_BIND_ADDRESS` controls the Docker host-side port binding, so DNS is not published on every host interface.
-`DNS_CONTAINER_ADDRESS` must match the address in `dnsmasq.d/00-listen.conf`, because dnsmasq runs inside the container.
+`DNS_CONTAINER_ADDRESS` is the container's fixed IP on the Docker network; dnsmasq must listen on it (`listen-address=` in your config).
 
-Custom dnsmasq settings live in `dnsmasq.d/*.conf`.
-Update `dnsmasq.d/10-local.conf` for local DNS records:
-```conf
-address=/nas.example.com/192.168.0.x
-address=/nas.example.com/
-```
+`DNS_CONFIG_PATH` is the host folder mounted read-only at `/etc/dnsmasq.d`; every `*.conf` in it is loaded. `./dnsmasq.d` in this repo is a working sample.
+Do not mount `/etc/dnsmasq.conf` directly: the image only generates its config (including `server=$DNS1`/`$DNS2`) when that file is absent.
 
 ### 2. Deploy on Synology NAS
 

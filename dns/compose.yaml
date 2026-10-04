@@ -5,7 +5,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./dnsmasq.d:/etc/dnsmasq.d:ro
+      - ${DNS_CONFIG_PATH:?Set the dnsmasq.d folder}:/etc/dnsmasq.d:ro
     ports:
       - "${DNS_HOST_BIND_ADDRESS}:53:53/udp"
       - "${DNS_HOST_BIND_ADDRESS}:53:53/tcp"
