@@ -23,6 +23,8 @@ OUT_DIR="$GENERATED_DIR"
 if [ "$DRY_RUN" = 1 ]; then
     OUT_DIR="$(mktemp -d)"
     trap 'rm -rf "$OUT_DIR"' EXIT
+else
+    mkdir -p "$GENERATED_DIR" "$LOG_DIR"
 fi
 
 render() {
@@ -51,8 +53,6 @@ if [ "$DRY_RUN" = 1 ]; then
     echo "dry run: nothing installed; the syslog-ng syntax check only runs on a real install"
     exit 0
 fi
-
-mkdir -p "$GENERATED_DIR" "$LOG_DIR"
 
 if cmp -s "$GENERATED_DIR/docker-logs.conf" "$SYSLOG_DST"; then
     echo "syslog-ng rule unchanged"
