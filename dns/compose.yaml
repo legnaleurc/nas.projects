@@ -10,3 +10,7 @@ services:
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
+    logging:
+      driver: journald
+      options:
+        tag: dns-dnsmasq

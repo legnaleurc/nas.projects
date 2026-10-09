@@ -16,3 +16,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: drive.sh serve
+    logging:
+      driver: journald
+      options:
+        tag: drive-drive

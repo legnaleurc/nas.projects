@@ -58,5 +58,10 @@ services:
       # Logs
       - ${LOGS_PATH}:/logs
 
+    logging:
+      driver: journald
+      options:
+        tag: acme-acme
+
     # Optional: Network mode host if DNS resolution issues occur
     # network_mode: host

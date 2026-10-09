@@ -11,3 +11,7 @@ services:
       - ./index.html:/usr/share/nginx/html/index.html:ro
       - ./nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
     restart: on-failure
+    logging:
+      driver: journald
+      options:
+        tag: dfd-dfd

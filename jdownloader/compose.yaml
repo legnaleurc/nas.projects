@@ -13,3 +13,7 @@ services:
       - ${JDOWNLOADER_CONFIG_PATH:?Set the configuration folder}:/config:rw
       - ${JDOWNLOADER_DOWNLOAD_PATH:?Set the download folder}:/output:rw
     restart: unless-stopped
+    logging:
+      driver: journald
+      options:
+        tag: jdownloader-jdownloader
