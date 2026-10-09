@@ -22,7 +22,7 @@ logging:
 
 `scripts/install.sh` renders `templates/*.in` from `.env` into `generated/` and installs the syslog-ng rule as a regular file at `/usr/local/etc/syslog-ng/patterndb.d/docker-logs.conf`, where DSM packages keep theirs. It is a copy rather than a symlink because syslog-ng starts before `/volume1` is mounted.
 
-syslog-ng on DSM runs as `system:log`, so the rule is installed as `root:root 0644` and `LOG_DIR` is owned by `SYSLOG_OWNER` with mode `0750`. syslog-ng skips an include it cannot read and still reports a successful reload, so the script confirms the rule is in the running config (`syslog-ng-ctl config --preprocessed`) and points to `/var/log/syslog.log` if not.
+syslog-ng on DSM runs as `system:log`, so the rule is installed as `root:root 0644`. `LOG_DIR` is owned by `SYSLOG_USER:LOG_GROUP` with mode `2770`: the setgid bit makes new log files inherit `LOG_GROUP`, and the rule creates them with mode `0660`, so members of `LOG_GROUP` can read, write and delete them without sudo. syslog-ng skips an include it cannot read and still reports a successful reload, so the script confirms the rule is in the running config (`syslog-ng-ctl config --preprocessed`) and points to `/var/log/syslog.log` if not.
 
 The install step checks the full syslog-ng config with `syslog-ng --syntax-only` and restores the previous rule if it fails. It only reloads syslog-ng when the rule changed.
 
@@ -40,7 +40,8 @@ Edit `.env`:
 - `LOG_ROTATE_PERIOD`: `daily`, `weekly`, `monthly` or `yearly`
 - `LOG_ROTATE_KEEP`: number of rotated files to keep, in `LOG_ROTATE_PERIOD` units
 - `SYSLOG_UNIT`: syslog-ng unit name, check with `systemctl list-units --all | grep -i syslog`
-- `SYSLOG_OWNER`: `user:group` syslog-ng runs as (DSM: `system:log`), check the `-u`/`-g` flags in `ps -ef | grep '[s]yslog-ng'`
+- `SYSLOG_USER`: user syslog-ng runs as (DSM: `system`), check the `-u` flag in `ps -ef | grep '[s]yslog-ng'`
+- `LOG_GROUP`: existing group that gets read-write access to the log files. `users` works out of the box but includes every local DSM user; for access by specific users only, create a group in Control Panel → User & Group → Group and set it here
 
 The real `.env` and `generated/` are local-only.
 

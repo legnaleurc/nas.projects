@@ -25,9 +25,12 @@ if [ "$DRY_RUN" = 1 ]; then
     trap 'rm -rf "$OUT_DIR"' EXIT
 else
     mkdir -p "$GENERATED_DIR" "$LOG_DIR"
-    # syslog-ng drops privileges to $SYSLOG_OWNER, so it must own the folder it writes to.
-    chown "$SYSLOG_OWNER" "$LOG_DIR"
-    chmod 0750 "$LOG_DIR"
+    # syslog-ng drops privileges to $SYSLOG_USER, so it must own the folder it writes to.
+    # The setgid bit makes new files inherit $LOG_GROUP, which the rule makes group read-write.
+    chown "$SYSLOG_USER:$LOG_GROUP" "$LOG_DIR"
+    chmod 2770 "$LOG_DIR"
+    # Bring files created before LOG_GROUP was set (or changed) in line.
+    find "$LOG_DIR" -maxdepth 1 -type f -exec chgrp "$LOG_GROUP" {} + -exec chmod 0660 {} +
 fi
 
 render() {

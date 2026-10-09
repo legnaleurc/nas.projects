@@ -4,7 +4,9 @@ filter f_docker_logs { program("^(@LOG_PROJECTS_REGEX@)-"); };
 destination d_docker_logs {
     file("@LOG_DIR@/${PROGRAM}.log"
          template("${ISODATE} ${HOST} ${PROGRAM}: ${MSG}\n")
-         create-dirs(yes));
+         create-dirs(yes)
+         # Keep the group inherited from the setgid LOG_DIR and let it read and write.
+         owner() group() perm(0660));
 };
 
 log { source(src); filter(f_docker_logs); destination(d_docker_logs); flags(final); };
