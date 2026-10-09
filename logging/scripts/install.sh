@@ -25,6 +25,9 @@ if [ "$DRY_RUN" = 1 ]; then
     trap 'rm -rf "$OUT_DIR"' EXIT
 else
     mkdir -p "$GENERATED_DIR" "$LOG_DIR"
+    # syslog-ng drops privileges to $SYSLOG_OWNER, so it must own the folder it writes to.
+    chown "$SYSLOG_OWNER" "$LOG_DIR"
+    chmod 0750 "$LOG_DIR"
 fi
 
 render() {
@@ -54,20 +57,31 @@ if [ "$DRY_RUN" = 1 ]; then
     exit 0
 fi
 
-if cmp -s "$GENERATED_DIR/docker-logs.conf" "$SYSLOG_DST"; then
+# syslog-ng runs unprivileged and silently skips include files it cannot read,
+# so the rule must be world-readable. cp would inherit the source folder's mode.
+install_rule() {
+    rm -f "$SYSLOG_DST"
+    cp "$1" "$SYSLOG_DST"
+    chown root:root "$SYSLOG_DST"
+    chmod 0644 "$SYSLOG_DST"
+}
+
+if cmp -s "$GENERATED_DIR/docker-logs.conf" "$SYSLOG_DST" \
+    && [ "$(stat -c %a "$SYSLOG_DST")" = 644 ]; then
     echo "syslog-ng rule unchanged"
     exit 0
 fi
 
 # Swap in the new rule, and roll back if the full config no longer parses.
 if [ -f "$SYSLOG_DST" ]; then
+    rm -f "$GENERATED_DIR/docker-logs.conf.previous"
     cp "$SYSLOG_DST" "$GENERATED_DIR/docker-logs.conf.previous"
 fi
-cp "$GENERATED_DIR/docker-logs.conf" "$SYSLOG_DST"
+install_rule "$GENERATED_DIR/docker-logs.conf"
 
 if ! syslog-ng --syntax-only; then
     if [ -f "$GENERATED_DIR/docker-logs.conf.previous" ]; then
-        cp "$GENERATED_DIR/docker-logs.conf.previous" "$SYSLOG_DST"
+        install_rule "$GENERATED_DIR/docker-logs.conf.previous"
     else
         rm -f "$SYSLOG_DST"
     fi
@@ -76,4 +90,15 @@ if ! syslog-ng --syntax-only; then
 fi
 
 systemctl reload "$SYSLOG_UNIT"
-echo "syslog-ng rule installed and $SYSLOG_UNIT reloaded"
+
+# The reload is asynchronous and reports success even when an include is skipped,
+# so confirm the running config actually contains the rule.
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+    if syslog-ng-ctl config --preprocessed | grep -q d_docker_logs; then
+        echo "syslog-ng rule installed and $SYSLOG_UNIT reloaded"
+        exit 0
+    fi
+    sleep 1
+done
+echo "syslog-ng reloaded but the rule is not active; check /var/log/syslog.log" >&2
+exit 1

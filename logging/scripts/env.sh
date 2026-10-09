@@ -17,6 +17,7 @@ fi
 : "${LOG_ROTATE_PERIOD:=daily}"
 : "${LOG_ROTATE_KEEP:=14}"
 : "${SYSLOG_UNIT:=syslog-ng}"
+: "${SYSLOG_OWNER:=system:log}"
 
 case "$LOG_ROTATE_PERIOD" in
     daily|weekly|monthly|yearly) ;;
