@@ -13,7 +13,7 @@ destination d_docker_logs {
 
 destination d_docker_logs_stamp {
     file("@LOG_DIR@/${PROGRAM}.log"
-         template("${ISODATE} ${HOST} ${PROGRAM}: ${MSG}\n")
+         template("${ISODATE} ${MSG}\n")
          create-dirs(yes)
          owner() group() perm(0660));
 };
