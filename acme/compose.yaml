@@ -58,6 +58,9 @@ services:
       # Logs
       - ${LOGS_PATH}:/logs
 
+      # Use the host timezone for log timestamps
+      - /etc/localtime:/etc/localtime:ro
+
     logging:
       driver: journald
       options:
