@@ -14,6 +14,7 @@ fi
 
 : "${LOG_PROJECTS:?Set LOG_PROJECTS in .env}"
 : "${LOG_DIR:?Set LOG_DIR in .env}"
+: "${LOG_STAMP_TAGS:=}"
 : "${LOG_ROTATE_PERIOD:=daily}"
 : "${LOG_ROTATE_KEEP:=14}"
 : "${SYSLOG_UNIT:=syslog-ng}"

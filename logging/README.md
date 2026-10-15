@@ -36,6 +36,7 @@ cp .env.example .env
 
 Edit `.env`:
 - `LOG_PROJECTS`: projects whose tags start with `<project>-`
+- `LOG_STAMP_TAGS`: tags whose lines have no timestamp of their own; they get an `<ISODATE> <HOST> <tag>:` prefix, while other tags are written as-is
 - `LOG_DIR`: absolute folder for the log files
 - `LOG_ROTATE_PERIOD`: `daily`, `weekly`, `monthly` or `yearly`
 - `LOG_ROTATE_KEEP`: number of rotated files to keep, in `LOG_ROTATE_PERIOD` units

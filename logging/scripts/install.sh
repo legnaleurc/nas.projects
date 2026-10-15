@@ -18,6 +18,8 @@ SYSLOG_DST=/usr/local/etc/syslog-ng/patterndb.d/docker-logs.conf
 
 # "acme dfd dns" -> "acme|dfd|dns"
 LOG_PROJECTS_REGEX="$(echo $LOG_PROJECTS | tr ' ' '|')"
+# Empty matches no tag, since every routed tag has a "<project>-" prefix.
+LOG_STAMP_TAGS_REGEX="$(echo $LOG_STAMP_TAGS | tr ' ' '|')"
 
 OUT_DIR="$GENERATED_DIR"
 if [ "$DRY_RUN" = 1 ]; then
@@ -36,6 +38,7 @@ fi
 render() {
     sed -e "s#@LOG_DIR@#$LOG_DIR#g" \
         -e "s#@LOG_PROJECTS_REGEX@#$LOG_PROJECTS_REGEX#g" \
+        -e "s#@LOG_STAMP_TAGS_REGEX@#$LOG_STAMP_TAGS_REGEX#g" \
         -e "s#@LOG_ROTATE_PERIOD@#$LOG_ROTATE_PERIOD#g" \
         -e "s#@LOG_ROTATE_KEEP@#$LOG_ROTATE_KEEP#g" \
         "$PROJECT_DIR/templates/$1.in" > "$OUT_DIR/$1"
