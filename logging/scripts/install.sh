@@ -72,15 +72,37 @@ install_rule() {
     chmod 0644 "$SYSLOG_DST"
 }
 
+# syslog-ng keeps its old config when a reload fails and still reports success, and
+# --syntax-only misses some errors that stop it from starting (e.g. duplicate persist
+# names), so compare what is running with what the files on disk expand to.
+running_config_current() {
+    syslog-ng --syntax-only --preprocess-into="$GENERATED_DIR/syslog-ng.expected" 2>/dev/null \
+        && syslog-ng-ctl config --preprocessed > "$GENERATED_DIR/syslog-ng.running" 2>/dev/null \
+        && diff -q -B "$GENERATED_DIR/syslog-ng.expected" "$GENERATED_DIR/syslog-ng.running" >/dev/null
+}
+
+# The reload is asynchronous, so give it a few seconds.
+wait_running_config() {
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        running_config_current && return 0
+        sleep 1
+    done
+    return 1
+}
+
 if cmp -s "$GENERATED_DIR/docker-logs.conf" "$SYSLOG_DST" \
     && [ "$(stat -c %a "$SYSLOG_DST")" = 644 ]; then
-    echo "syslog-ng rule unchanged"
-    exit 0
+    if wait_running_config; then
+        echo "syslog-ng rule unchanged"
+        exit 0
+    fi
+    echo "syslog-ng rule unchanged but not active; check /var/log/syslog.log, then run: systemctl restart $SYSLOG_UNIT" >&2
+    exit 1
 fi
 
 # Swap in the new rule, and roll back if the full config no longer parses.
+rm -f "$GENERATED_DIR/docker-logs.conf.previous"
 if [ -f "$SYSLOG_DST" ]; then
-    rm -f "$GENERATED_DIR/docker-logs.conf.previous"
     cp "$SYSLOG_DST" "$GENERATED_DIR/docker-logs.conf.previous"
 fi
 install_rule "$GENERATED_DIR/docker-logs.conf"
@@ -97,14 +119,17 @@ fi
 
 systemctl reload "$SYSLOG_UNIT"
 
-# The reload is asynchronous and reports success even when an include is skipped,
-# so confirm the running config actually contains the rule.
-for _ in 1 2 3 4 5 6 7 8 9 10; do
-    if syslog-ng-ctl config --preprocessed | grep -q d_docker_logs; then
-        echo "syslog-ng rule installed and $SYSLOG_UNIT reloaded"
-        exit 0
-    fi
-    sleep 1
-done
-echo "syslog-ng reloaded but the rule is not active; check /var/log/syslog.log" >&2
+if wait_running_config; then
+    echo "syslog-ng rule installed and $SYSLOG_UNIT reloaded"
+    exit 0
+fi
+
+# Leaving a rule syslog-ng rejects would stop it from starting on the next boot, and
+# after 20 failed starts DSM falls back to a config without any patterndb.d rules.
+if [ -f "$GENERATED_DIR/docker-logs.conf.previous" ]; then
+    install_rule "$GENERATED_DIR/docker-logs.conf.previous"
+else
+    rm -f "$SYSLOG_DST"
+fi
+echo "syslog-ng did not load the new rule; previous rule restored, see /var/log/syslog.log" >&2
 exit 1

@@ -3,6 +3,10 @@ filter f_docker_logs { program("^(@LOG_PROJECTS_REGEX@)-"); };
 # Tags whose messages have no timestamp of their own.
 filter f_docker_logs_stamp { program("^(@LOG_STAMP_TAGS_REGEX@)$"); };
 
+rewrite r_docker_logs_stamp { set("${ISODATE} ${MSG}" value("MESSAGE")); };
+
+# Only one file() destination may use this path: syslog-ng refuses to start
+# when two destinations share a persist name, which is derived from the path.
 destination d_docker_logs {
     file("@LOG_DIR@/${PROGRAM}.log"
          template("${MSG}\n")
@@ -11,17 +15,12 @@ destination d_docker_logs {
          owner() group() perm(0660));
 };
 
-destination d_docker_logs_stamp {
-    file("@LOG_DIR@/${PROGRAM}.log"
-         template("${ISODATE} ${MSG}\n")
-         create-dirs(yes)
-         owner() group() perm(0660));
-};
-
 log {
     source(src);
     filter(f_docker_logs);
-    log { filter(f_docker_logs_stamp); destination(d_docker_logs_stamp); flags(final); };
-    log { destination(d_docker_logs); };
+    if (filter(f_docker_logs_stamp)) {
+        rewrite(r_docker_logs_stamp);
+    };
+    destination(d_docker_logs);
     flags(final);
 };
