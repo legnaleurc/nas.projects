@@ -8,5 +8,6 @@ services:
       - ${DATA_PATH}:/mnt/data:rw
       - ${STORAGE_PATH}:/mnt/storage:rw
     command: sleep infinity
+    restart: unless-stopped
     environment:
       - TZ=${TZ:-UTC}
