@@ -8,8 +8,6 @@ services:
       - "${DNS_HOST_BIND_ADDRESS}:53:53/udp"
       - "${DNS_HOST_BIND_ADDRESS}:53:53/tcp"
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
     logging:
       driver: journald
       options:
